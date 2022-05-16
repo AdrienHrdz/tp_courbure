@@ -17,11 +17,12 @@
 #include <sstream>
 #include "../../lib/mesh/mesh_io.hpp"
 
+#include "../../lib/3d/mat2.hpp"
 
 using namespace cpe;
 
 vec3 colormap(float x);
-
+vec2 curvature(vec3 Su, vec3 Sv, vec3 Suu, vec3 Suv, vec3 Svv);
 
 void scene::build_surface()
 {
@@ -684,4 +685,28 @@ vec3 colormap(float x)
                + vec3( 0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00 )) * dx
                + vec3( 9.7629999999999995e-01,  9.8309999999999997e-01,  5.3800000000000001e-02 );
     }
+}
+
+vec2 curvature(vec3 Su, vec3 Sv, vec3 Suu, vec3 Suv, vec3 Svv)
+{
+    // First fundamental form
+    mat2 Is = { dot(Su,Su), dot(Su,Sv),
+                dot(Su,Sv), dot(Sv,Sv)};
+    // normal
+    vec3 n = normalized(cross(Su,Sv));
+    // Second fundamental form
+    mat2 IIs = {dot(n,Suu), dot(n,Suv),
+                dot(n,Suv), dot(n,Svv)};
+    // Weingarten matrix
+    mat2 Ws = IIs * inverse(Is);
+    // eigenvalues are principal curvatures
+    vec2 LAMBDA = eigenvalue(Ws);
+    float lambda1 = LAMBDA(0);
+    float lambda2 = LAMBDA(1);
+    // Gauss curvature
+    float Ks = lambda1*lambda2;
+    // Mean curvature
+    float Hs = 0.5*(lambda1+lambda2);
+
+    return {Ks,Hs};
 }

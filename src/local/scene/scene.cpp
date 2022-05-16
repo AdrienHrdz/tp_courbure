@@ -169,7 +169,7 @@ void scene::build_helicoide_droit()
     float const u_min = 0.0f;
     float const u_max = 1.0f;
     float const v_min = 0.0f;
-    float const v_max = 6.0f*M_PI;
+    float const v_max = 4.0f*M_PI;
 
     float const a = 0.2f;
     float const h = 2.0f;
@@ -238,7 +238,7 @@ void scene::load_scene()
     // build_sphere();
     // build_paraboloide_hyperbolique();
     // build_catenoide();
-    // build_helicoide_droit();
+    build_helicoide_droit();
     // build_pseudo_sphere();
 
 

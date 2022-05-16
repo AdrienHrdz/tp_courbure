@@ -20,9 +20,9 @@
 #include "../../lib/3d/mat2.hpp"
 
 using namespace cpe;
-
 vec3 colormap(float x);
 vec2 curvature(vec3 Su, vec3 Sv, vec3 Suu, vec3 Suv, vec3 Svv);
+float normalisationColormap(float Ks, float min, float max);
 
 void scene::build_surface()
 {
@@ -103,6 +103,7 @@ void scene::build_sphere()
         }
     }
     float MAX_gauss_curv = *std::max_element(gauss_curv.begin(), gauss_curv.end());
+    float MIN_gauss_curv = *std::min_element(gauss_curv.begin(), gauss_curv.end());
     for(int ku=0 ; ku<Nu ; ++ku)
     {
         for(int kv=0 ; kv<Nv ; ++kv)
@@ -125,7 +126,8 @@ void scene::build_sphere()
             Suv = vec3(r*sin(u)*sin(v), -r*cos(u)*sin(v), 0);
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
-            Ks = curvatures(0)/MAX_gauss_curv;
+            Ks = curvatures(0);
+            Ks = normalisationColormap(Ks, MIN_gauss_curv, MAX_gauss_curv);
             color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
             surface.color(ku,kv) = color;
@@ -180,6 +182,7 @@ void scene::build_paraboloide_hyperbolique()
         }
     }
     float MAX_gauss_curv = *std::max_element(gauss_curv.begin(), gauss_curv.end());
+    float MIN_gauss_curv = *std::min_element(gauss_curv.begin(), gauss_curv.end());
 
     for(int ku=0 ; ku<Nu ; ++ku)
     {
@@ -203,7 +206,8 @@ void scene::build_paraboloide_hyperbolique()
             Suv = vec3(0,0,0);
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
-            Ks = abs(curvatures(0)/MAX_gauss_curv);
+            Ks = curvatures(0);
+            Ks = normalisationColormap(Ks, MIN_gauss_curv, MAX_gauss_curv);
             color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
             surface.color(ku,kv) = color;
@@ -244,11 +248,11 @@ void scene::build_catenoide()
             float const u = u_min + u_n * (u_max-u_min);
             float const v = v_min + v_n * (v_max-v_min);
 
-            // Su = ;
-            // Sv = ;
-            // Suu = ;
-            // Svv = ;
-            // Suv = ;
+            Su = vec3(a*sinh(u)*cos(v),a*sinh(u)*sin(v),a);
+            Sv = vec3(-a*cosh(u)*sin(v),a*cosh(u)*cos(v),0);
+            Suu = vec3(a*cosh(u)*cos(v),a*cosh(u)*sin(v),0);
+            Svv = vec3(-a*cosh(u)*cos(v),-a*cosh(u)*sin(v),0);
+            Suv = vec3(-a*sinh(u)*sin(v),a*sinh(u)*cos(v),0);
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
             Ks = curvatures(0);
@@ -256,6 +260,7 @@ void scene::build_catenoide()
         }
     }
     float MAX_gauss_curv = *std::max_element(gauss_curv.begin(), gauss_curv.end());
+    float MIN_gauss_curv = *std::min_element(gauss_curv.begin(), gauss_curv.end());
     for(int ku=0 ; ku<Nu ; ++ku)
     {
         for(int kv=0 ; kv<Nv ; ++kv)
@@ -271,14 +276,15 @@ void scene::build_catenoide()
             float const y = a*cosh(u)*sin(v);
             float const z = a*u;
 
-            // Su = ;
-            // Sv = ;
-            // Suu = ;
-            // Svv = ;
-            // Suv = ;
+            Su = vec3(a*sinh(u)*cos(v),a*sinh(u)*sin(v),a);
+            Sv = vec3(-a*cosh(u)*sin(v),a*cosh(u)*cos(v),0);
+            Suu = vec3(a*cosh(u)*cos(v),a*cosh(u)*sin(v),0);
+            Svv = vec3(-a*cosh(u)*cos(v),-a*cosh(u)*sin(v),0);
+            Suv = vec3(-a*sinh(u)*sin(v),a*sinh(u)*cos(v),0);
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
-            Ks = curvatures(0)/MAX_gauss_curv;
+            Ks = curvatures(0);
+            Ks = normalisationColormap(Ks, MIN_gauss_curv, MAX_gauss_curv);
             color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
             surface.color(ku,kv) = color;
@@ -320,11 +326,21 @@ void scene::build_helicoide_droit()
             float const u = u_min + u_n * (u_max-u_min);
             float const v = v_min + v_n * (v_max-v_min);
 
-            // Su = ;
-            // Sv = ;
-            // Suu = ;
-            // Svv = ;
-            // Suv = ;
+            Su = vec3(a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+                      a*cosh(u-v)*sin(u+v) + a*sinh(u-v)*cos(u+v),
+                      h);
+            Sv = vec3(-a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+                      -a*cosh(u-v)*sin(u+v) + a*sinh(u-v)*cos(u+v),
+                      h);
+            Suu = vec3(a*sinh(u-v)*cos(u+v) - a*cosh(u-v)*sin(u+v) - a*cosh(u-v)*sin(u+v) - a*sinh(u-v)*cos(u+v),
+                       a*sinh(u-v)*sin(u+v) + a*cosh(u-v)*cos(u+v) + a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+                       0);
+            Svv = vec3(a*sinh(u-v)*cos(u+v) + a*cosh(u-v)*sin(u+v) + a*cosh(u-v)*sin(u+v) - a*sinh(u-v)*cos(u+v),
+                       a*sinh(u-v)*sin(u+v) - a*cosh(u-v)*cos(u+v) - a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+                       0);
+            Suv = vec3(-a*sinh(u-v)*cos(u+v) - a*cosh(u-v)*sin(u+v) + a*cosh(u-v)*sin(u+v) - a*sinh(u-v)*cos(u+v),
+                       -a*sinh(u-v)*sin(u+v) + a*cosh(u-v)*cos(u+v) - a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+                       0);
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
             Ks = curvatures(0);
@@ -347,11 +363,21 @@ void scene::build_helicoide_droit()
             float const y = a*sinh(u-v)*sin(u+v);
             float const z = h*(u+v);
 
-            // Su = ;
-            // Sv = ;
-            // Suu = ;
-            // Svv = ;
-            // Suv = ;
+            Su = vec3(a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+                      a*cosh(u-v)*sin(u+v) + a*sinh(u-v)*cos(u+v),
+                      h);
+            Sv = vec3(-a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+                      -a*cosh(u-v)*sin(u+v) + a*sinh(u-v)*cos(u+v),
+                      h);
+            Suu = vec3(a*sinh(u-v)*cos(u+v) - a*cosh(u-v)*sin(u+v) - a*cosh(u-v)*sin(u+v) - a*sinh(u-v)*cos(u+v),
+                       a*sinh(u-v)*sin(u+v) + a*cosh(u-v)*cos(u+v) + a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+                       0);
+            Svv = vec3(a*sinh(u-v)*cos(u+v) + a*cosh(u-v)*sin(u+v) + a*cosh(u-v)*sin(u+v) - a*sinh(u-v)*cos(u+v),
+                       a*sinh(u-v)*sin(u+v) - a*cosh(u-v)*cos(u+v) - a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+                       0);
+            Suv = vec3(-a*sinh(u-v)*cos(u+v) - a*cosh(u-v)*sin(u+v) + a*cosh(u-v)*sin(u+v) - a*sinh(u-v)*cos(u+v),
+                       -a*sinh(u-v)*sin(u+v) + a*cosh(u-v)*cos(u+v) - a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+                       0);
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
             Ks = curvatures(0)/MAX_gauss_curv;
@@ -396,11 +422,21 @@ void scene::build_pseudo_sphere()
             float const u = u_min + u_n * (u_max-u_min);
             float const v = v_min + v_n * (v_max-v_min);
 
-            // Su = ;
-            // Sv = ;
-            // Suu = ;
-            // Svv = ;
-            // Suv = ;
+            Su = vec3(-a*cos(v)*sinh(u)/(cosh(u)*cosh(u)),
+                      -a*sin(v)*sinh(u)/(cosh(u)*cosh(u)),
+                      a*tanh(u)*tanh(u));
+            Sv = vec3(-a*sin(v)/cosh(u),
+                      a*cos(v)/cosh(u),
+                      0);
+            Suu = vec3(-a*cos(v)*(cosh(u)*cosh(u)*cosh(u) - 2*sinh(u)*sinh(u)*cosh(u))/(cosh(u)*cosh(u)*cosh(u)*cosh(u)),
+                       -a*sin(v)*(cosh(u)*cosh(u)*cosh(u) - 2*sinh(u)*sinh(u)*cosh(u))/(cosh(u)*cosh(u)*cosh(u)*cosh(u)),
+                       a*(1-tanh(u)*tanh(u))*tanh(u));
+            Svv = vec3(-a*cos(v)/cosh(u),
+                       -a*sin(v)/cosh(u),
+                       0);
+            Suv = vec3(a*sinh(u)*sin(v)/(cosh(u)*cosh(u)),
+                       -a*sinh(u)*cos(v)/(cosh(u)*cosh(u)),
+                       0);
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
             Ks = curvatures(0);
@@ -408,6 +444,8 @@ void scene::build_pseudo_sphere()
         }
     }
     float MAX_gauss_curv = *std::max_element(gauss_curv.begin(), gauss_curv.end());
+    float MIN_gauss_curv = *std::min_element(gauss_curv.begin(), gauss_curv.end());
+
     for(int ku=0 ; ku<Nu ; ++ku)
     {
         for(int kv=0 ; kv<Nv ; ++kv)
@@ -423,8 +461,27 @@ void scene::build_pseudo_sphere()
             float const y = a*sin(v)/cosh(u);
             float const z = a*(u-tanh(u));
 
+            Su = vec3(-a*cos(v)*sinh(u)/(cosh(u)*cosh(u)),
+                      -a*sin(v)*sinh(u)/(cosh(u)*cosh(u)),
+                      a*tanh(u)*tanh(u));
+            Sv = vec3(-a*sin(v)/cosh(u),
+                      a*cos(v)/cosh(u),
+                      0);
+            Suu = vec3(-a*cos(v)*(cosh(u)*cosh(u)*cosh(u) - 2*sinh(u)*sinh(u)*cosh(u))/(cosh(u)*cosh(u)*cosh(u)*cosh(u)),
+                       -a*sin(v)*(cosh(u)*cosh(u)*cosh(u) - 2*sinh(u)*sinh(u)*cosh(u))/(cosh(u)*cosh(u)*cosh(u)*cosh(u)),
+                       a*(1-tanh(u)*tanh(u))*tanh(u));
+            Svv = vec3(-a*cos(v)/cosh(u),
+                       -a*sin(v)/cosh(u),
+                       0);
+            Suv = vec3(a*sinh(u)*sin(v)/(cosh(u)*cosh(u)),
+                       -a*sinh(u)*cos(v)/(cosh(u)*cosh(u)),
+                       0);
+
+            curvatures = curvature(Su,Sv,Suu,Suv,Svv);
+            Ks = curvatures(0)/MAX_gauss_curv;
+            color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
-            surface.color(ku,kv) = colormap(v_n);
+            surface.color(ku,kv) = color;
         }
     }
 }
@@ -433,13 +490,13 @@ void scene::load_scene()
 {
     load_common_data();
 
-
-    // build_surface();
-    // build_sphere();
-    build_paraboloide_hyperbolique();
-    // build_catenoide();
-    // build_helicoide_droit();
-    // build_pseudo_sphere();
+    // Choix de la surface à tracer
+    //build_surface();
+    build_sphere();
+    //build_paraboloide_hyperbolique();
+    //build_catenoide();
+    //build_helicoide_droit();
+    //build_pseudo_sphere();
 
 
     surface.fill_normal();
@@ -492,7 +549,8 @@ void scene::load_common_data()
                                     "shaders/shader_mesh.frag"); PRINT_OPENGL_ERROR();
 }
 
-vec3 colormap(float x)
+//vec3 colormap(float x)
+/*
 {
     if (x < 0.0) {
         return vec3(0.0, 0.0, 0.0);
@@ -884,6 +942,45 @@ vec3 colormap(float x)
                + vec3( 0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00 )) * dx
                + vec3( 9.7629999999999995e-01,  9.8309999999999997e-01,  5.3800000000000001e-02 );
     }
+}*/
+
+vec3 colormap(float x)
+{
+    float r = 0.0, g = 0.0, b = 0.0;
+
+    if (x < 0.0) {
+        r = 127.0 / 255.0;
+    } else if (x <= 1.0 / 9.0) {
+        r = 1147.5 * (1.0 / 9.0 - x) / 255.0;
+    } else if (x <= 5.0 / 9.0) {
+        r = 0.0;
+    } else if (x <= 7.0 / 9.0) {
+        r = 1147.5 * (x - 5.0 / 9.0) / 255.0;
+    } else {
+        r = 1.0;
+    }
+
+    if (x <= 1.0 / 9.0) {
+        g = 0.0;
+    } else if (x <= 3.0 / 9.0) {
+        g = 1147.5 * (x - 1.0 / 9.0) / 255.0;
+    } else if (x <= 7.0 / 9.0) {
+        g = 1.0;
+    } else if (x <= 1.0) {
+        g = 1.0 - 1147.5 * (x - 7.0 / 9.0) / 255.0;
+    } else {
+        g = 0.0;
+    }
+
+    if (x <= 3.0 / 9.0) {
+        b = 1.0;
+    } else if (x <= 5.0 / 9.0) {
+        b = 1.0 - 1147.5 * (x - 3.0 / 9.0) / 255.0;
+    } else {
+        b = 0.0;
+    }
+
+    return vec3(r, g, b);
 }
 
 vec2 curvature(vec3 Su, vec3 Sv, vec3 Suu, vec3 Suv, vec3 Svv)
@@ -908,4 +1005,17 @@ vec2 curvature(vec3 Su, vec3 Sv, vec3 Suu, vec3 Suv, vec3 Svv)
     float Hs = 0.5*(lambda1+lambda2);
     //std::cout<< "Ks : "<<Ks<<"  ;Hs : "<<Hs<<std::endl;
     return {Ks,Hs};
+}
+
+float normalisationColormap(float Ks, float min, float max)
+{
+    float len = std::max( abs(min), abs(max));
+    if(Ks<0)
+    {
+        return (len-Ks)/(2*len);
+    }
+    else
+    {
+        return (len+Ks)/(2*len);
+    }
 }

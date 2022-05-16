@@ -70,6 +70,16 @@ void scene::build_sphere()
     float const v_max = 0.5f*M_PI;
 
     float const r = 0.2f;
+
+    vec3 Su;
+    vec3 Sv;
+    vec3 Suu;
+    vec3 Suv;
+    vec3 Svv;
+    vec2 curvatures;
+    float Ks;
+    float Hs;
+    vec3 color;
     for(int ku=0 ; ku<Nu ; ++ku)
     {
         for(int kv=0 ; kv<Nv ; ++kv)
@@ -85,8 +95,18 @@ void scene::build_sphere()
             float const y = r*sin(u)*cos(v);
             float const z = r*sin(v);
 
+            Su = vec3(-r*sin(u)*cos(v), r*cos(u)*cos(v), 0);
+            Sv = vec3(-r*cos(u)*sin(v), -r*sin(u)*sin(v), r*cos(v));
+            Suu = vec3(-r*cos(u)*cos(v), -r*sin(u)*cos(v), 0);
+            Svv = vec3(-r*cos(u)*cos(v), -r*sin(u)*cos(v), -r*sin(v));
+            Suv = vec3(r*sin(u)*sin(v), -r*cos(u)*sin(v), 0);
+
+            curvatures = curvature(Su,Sv,Suu,Suv,Svv);
+            // (Ks,Hs) = curvature(Su,Sv,Suu,Suv,Svv);
+            Ks = curvatures(0);
+            color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
-            surface.color(ku,kv) = {1.0f,v_n,1.0f};
+            surface.color(ku,kv) = color;
         }
     }
 }
@@ -236,10 +256,10 @@ void scene::load_scene()
 
 
     // build_surface();
-    // build_sphere();
+    build_sphere();
     // build_paraboloide_hyperbolique();
     // build_catenoide();
-    build_helicoide_droit();
+    // build_helicoide_droit();
     // build_pseudo_sphere();
 
 
@@ -707,6 +727,6 @@ vec2 curvature(vec3 Su, vec3 Sv, vec3 Suu, vec3 Suv, vec3 Svv)
     float Ks = lambda1*lambda2;
     // Mean curvature
     float Hs = 0.5*(lambda1+lambda2);
-
+    //std::cout<< "Ks : "<<Ks<<"  ;Hs : "<<Hs<<std::endl;
     return {Ks,Hs};
 }

@@ -14,6 +14,7 @@
 #include "../../lib/mesh/mesh_parametric.hpp"
 #include "../../lib/opengl/mesh_opengl.hpp"
 #include "../../lib/interface/camera_matrices.hpp"
+//#include "../../lib/3d/vec4.hpp"
 
 #include <vector>
 
@@ -28,6 +29,11 @@ public:
 
 
     void build_surface();
+    void build_sphere();
+    void build_paraboloide_hyperbolique();
+    void build_catenoide();
+    void build_helicoide_droit();
+    void build_pseudo_sphere();
 
 
     /** \brief Method called only once at the beginning (load off files ...) */

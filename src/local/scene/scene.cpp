@@ -168,11 +168,11 @@ void scene::build_paraboloide_hyperbolique()
             float const u = u_min + u_n * (u_max-u_min);
             float const v = v_min + v_n * (v_max-v_min);
 
-            // Su = ;
-            // Sv = ;
-            // Suu = ;
-            // Svv = ;
-            // Suv = ;
+            Su = vec3(a,0,2*h*u);
+            Sv = vec3(0,b,-2*h*v);
+            Suu = vec3(0,0,2*h);
+            Svv = vec3(0,0,-2*h);
+            Suv = vec3(0,0,0);
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
             Ks = curvatures(0);
@@ -196,14 +196,14 @@ void scene::build_paraboloide_hyperbolique()
             float const y = b*v;
             float const z = h*(u*u - v*v);
 
-            // Su = ;
-            // Sv = ;
-            // Suu = ;
-            // Svv = ;
-            // Suv = ;
+            Su = vec3(a,0,2*h*u);
+            Sv = vec3(0,b,-2*h*v);
+            Suu = vec3(0,0,2*h);
+            Svv = vec3(0,0,-2*h);
+            Suv = vec3(0,0,0);
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
-            Ks = curvatures(0)/MAX_gauss_curv;
+            Ks = abs(curvatures(0)/MAX_gauss_curv);
             color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
             surface.color(ku,kv) = color;
@@ -435,8 +435,8 @@ void scene::load_scene()
 
 
     // build_surface();
-    build_sphere();
-    // build_paraboloide_hyperbolique();
+    // build_sphere();
+    build_paraboloide_hyperbolique();
     // build_catenoide();
     // build_helicoide_droit();
     // build_pseudo_sphere();

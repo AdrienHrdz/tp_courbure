@@ -80,6 +80,29 @@ void scene::build_sphere()
     float Ks;
     float Hs;
     vec3 color;
+    std::vector<float> gauss_curv;
+    for(int ku=0 ; ku<Nu ; ++ku)
+    {
+        for(int kv=0 ; kv<Nv ; ++kv)
+        {
+            float const u_n = static_cast<float>(ku)/(Nu-1);
+            float const v_n = static_cast<float>(kv)/(Nv-1);
+
+            float const u = u_min + u_n * (u_max-u_min);
+            float const v = v_min + v_n * (v_max-v_min);
+
+            Su = vec3(-r*sin(u)*cos(v), r*cos(u)*cos(v), 0);
+            Sv = vec3(-r*cos(u)*sin(v), -r*sin(u)*sin(v), r*cos(v));
+            Suu = vec3(-r*cos(u)*cos(v), -r*sin(u)*cos(v), 0);
+            Svv = vec3(-r*cos(u)*cos(v), -r*sin(u)*cos(v), -r*sin(v));
+            Suv = vec3(r*sin(u)*sin(v), -r*cos(u)*sin(v), 0);
+
+            curvatures = curvature(Su,Sv,Suu,Suv,Svv);
+            Ks = curvatures(0);
+            gauss_curv.push_back(Ks);
+        }
+    }
+    float MAX_gauss_curv = *std::max_element(gauss_curv.begin(), gauss_curv.end());
     for(int ku=0 ; ku<Nu ; ++ku)
     {
         for(int kv=0 ; kv<Nv ; ++kv)
@@ -102,8 +125,7 @@ void scene::build_sphere()
             Suv = vec3(r*sin(u)*sin(v), -r*cos(u)*sin(v), 0);
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
-            // (Ks,Hs) = curvature(Su,Sv,Suu,Suv,Svv);
-            Ks = curvatures(0);
+            Ks = curvatures(0)/MAX_gauss_curv;
             color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
             surface.color(ku,kv) = color;
@@ -126,6 +148,39 @@ void scene::build_paraboloide_hyperbolique()
     float const b = 0.2f;
     float const h = 0.2f;
 
+    vec3 Su;
+    vec3 Sv;
+    vec3 Suu;
+    vec3 Suv;
+    vec3 Svv;
+    vec2 curvatures;
+    float Ks;
+    float Hs;
+    vec3 color;
+    std::vector<float> gauss_curv;
+    for(int ku=0 ; ku<Nu ; ++ku)
+    {
+        for(int kv=0 ; kv<Nv ; ++kv)
+        {
+            float const u_n = static_cast<float>(ku)/(Nu-1);
+            float const v_n = static_cast<float>(kv)/(Nv-1);
+
+            float const u = u_min + u_n * (u_max-u_min);
+            float const v = v_min + v_n * (v_max-v_min);
+
+            // Su = ;
+            // Sv = ;
+            // Suu = ;
+            // Svv = ;
+            // Suv = ;
+
+            curvatures = curvature(Su,Sv,Suu,Suv,Svv);
+            Ks = curvatures(0);
+            gauss_curv.push_back(Ks);
+        }
+    }
+    float MAX_gauss_curv = *std::max_element(gauss_curv.begin(), gauss_curv.end());
+
     for(int ku=0 ; ku<Nu ; ++ku)
     {
         for(int kv=0 ; kv<Nv ; ++kv)
@@ -141,8 +196,17 @@ void scene::build_paraboloide_hyperbolique()
             float const y = b*v;
             float const z = h*(u*u - v*v);
 
+            // Su = ;
+            // Sv = ;
+            // Suu = ;
+            // Svv = ;
+            // Suv = ;
+
+            curvatures = curvature(Su,Sv,Suu,Suv,Svv);
+            Ks = curvatures(0)/MAX_gauss_curv;
+            color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
-            surface.color(ku,kv) = colormap(v_n);
+            surface.color(ku,kv) = color;
         }
     }
 }
@@ -160,6 +224,38 @@ void scene::build_catenoide()
 
     float const a = 0.2f;
 
+    vec3 Su;
+    vec3 Sv;
+    vec3 Suu;
+    vec3 Suv;
+    vec3 Svv;
+    vec2 curvatures;
+    float Ks;
+    float Hs;
+    vec3 color;
+    std::vector<float> gauss_curv;
+    for(int ku=0 ; ku<Nu ; ++ku)
+    {
+        for(int kv=0 ; kv<Nv ; ++kv)
+        {
+            float const u_n = static_cast<float>(ku)/(Nu-1);
+            float const v_n = static_cast<float>(kv)/(Nv-1);
+
+            float const u = u_min + u_n * (u_max-u_min);
+            float const v = v_min + v_n * (v_max-v_min);
+
+            // Su = ;
+            // Sv = ;
+            // Suu = ;
+            // Svv = ;
+            // Suv = ;
+
+            curvatures = curvature(Su,Sv,Suu,Suv,Svv);
+            Ks = curvatures(0);
+            gauss_curv.push_back(Ks);
+        }
+    }
+    float MAX_gauss_curv = *std::max_element(gauss_curv.begin(), gauss_curv.end());
     for(int ku=0 ; ku<Nu ; ++ku)
     {
         for(int kv=0 ; kv<Nv ; ++kv)
@@ -175,8 +271,17 @@ void scene::build_catenoide()
             float const y = a*cosh(u)*sin(v);
             float const z = a*u;
 
+            // Su = ;
+            // Sv = ;
+            // Suu = ;
+            // Svv = ;
+            // Suv = ;
+
+            curvatures = curvature(Su,Sv,Suu,Suv,Svv);
+            Ks = curvatures(0)/MAX_gauss_curv;
+            color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
-            surface.color(ku,kv) = colormap(v_n);
+            surface.color(ku,kv) = color;
         }
     }
 }
@@ -195,6 +300,38 @@ void scene::build_helicoide_droit()
     float const a = 0.2f;
     float const h = 2.0f;
 
+    vec3 Su;
+    vec3 Sv;
+    vec3 Suu;
+    vec3 Suv;
+    vec3 Svv;
+    vec2 curvatures;
+    float Ks;
+    float Hs;
+    vec3 color;
+    std::vector<float> gauss_curv;
+    for(int ku=0 ; ku<Nu ; ++ku)
+    {
+        for(int kv=0 ; kv<Nv ; ++kv)
+        {
+            float const u_n = static_cast<float>(ku)/(Nu-1);
+            float const v_n = static_cast<float>(kv)/(Nv-1);
+
+            float const u = u_min + u_n * (u_max-u_min);
+            float const v = v_min + v_n * (v_max-v_min);
+
+            // Su = ;
+            // Sv = ;
+            // Suu = ;
+            // Svv = ;
+            // Suv = ;
+
+            curvatures = curvature(Su,Sv,Suu,Suv,Svv);
+            Ks = curvatures(0);
+            gauss_curv.push_back(Ks);
+        }
+    }
+    float MAX_gauss_curv = *std::max_element(gauss_curv.begin(), gauss_curv.end());
     for(int ku=0 ; ku<Nu ; ++ku)
     {
         for(int kv=0 ; kv<Nv ; ++kv)
@@ -210,8 +347,17 @@ void scene::build_helicoide_droit()
             float const y = a*sinh(u-v)*sin(u+v);
             float const z = h*(u+v);
 
+            // Su = ;
+            // Sv = ;
+            // Suu = ;
+            // Svv = ;
+            // Suv = ;
+
+            curvatures = curvature(Su,Sv,Suu,Suv,Svv);
+            Ks = curvatures(0)/MAX_gauss_curv;
+            color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
-            surface.color(ku,kv) = colormap(v_n);
+            surface.color(ku,kv) = color;
         }
     }
 }
@@ -229,6 +375,39 @@ void scene::build_pseudo_sphere()
 
     float const a = 0.2f;
 
+    vec3 Su;
+    vec3 Sv;
+    vec3 Suu;
+    vec3 Suv;
+    vec3 Svv;
+    vec2 curvatures;
+    float Ks;
+    float Hs;
+    vec3 color;
+    std::vector<float> gauss_curv;
+
+    for(int ku=0 ; ku<Nu ; ++ku)
+    {
+        for(int kv=0 ; kv<Nv ; ++kv)
+        {
+            float const u_n = static_cast<float>(ku)/(Nu-1);
+            float const v_n = static_cast<float>(kv)/(Nv-1);
+
+            float const u = u_min + u_n * (u_max-u_min);
+            float const v = v_min + v_n * (v_max-v_min);
+
+            // Su = ;
+            // Sv = ;
+            // Suu = ;
+            // Svv = ;
+            // Suv = ;
+
+            curvatures = curvature(Su,Sv,Suu,Suv,Svv);
+            Ks = curvatures(0);
+            gauss_curv.push_back(Ks);
+        }
+    }
+    float MAX_gauss_curv = *std::max_element(gauss_curv.begin(), gauss_curv.end());
     for(int ku=0 ; ku<Nu ; ++ku)
     {
         for(int kv=0 ; kv<Nv ; ++kv)
@@ -719,7 +898,7 @@ vec2 curvature(vec3 Su, vec3 Sv, vec3 Suu, vec3 Suv, vec3 Svv)
                 dot(n,Suv), dot(n,Svv)};
     // Weingarten matrix
     mat2 Ws = IIs * inverse(Is);
-    // eigenvalues are principal curvatures
+    // eigenvalues are principals curvatures
     vec2 LAMBDA = eigenvalue(Ws);
     float lambda1 = LAMBDA(0);
     float lambda2 = LAMBDA(1);

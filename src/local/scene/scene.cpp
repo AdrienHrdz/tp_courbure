@@ -1009,6 +1009,8 @@ vec2 curvature(vec3 Su, vec3 Sv, vec3 Suu, vec3 Suv, vec3 Svv)
 
 float normalisationColormap(float Ks, float min, float max)
 {
+    // Pas tout sûr de cette fonction,
+    // à voir si on trouve une meilleure façon
     float len = std::max( abs(min), abs(max));
     if(Ks<0)
     {

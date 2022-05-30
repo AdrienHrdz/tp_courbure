@@ -26,14 +26,14 @@ Su = vec3(a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
 Sv = vec3(-a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
           -a*cosh(u-v)*sin(u+v) + a*sinh(u-v)*cos(u+v),
           h);
-Suu = vec3(a*sinh(u-v)*cos(u+v) - a*cosh(u-v)*sin(u+v) - a*cosh(u-v)*sin(u+v) - a*sinh(u-v)*cos(u+v),
-           a*sinh(u-v)*sin(u+v) + a*cosh(u-v)*cos(u+v) + a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+Suu = vec3(-2*a*sin(u+v)*cosh(u-v),
+           2*a*cosh(u-v)*cos(u+v),
            0);
-Svv = vec3(a*sinh(u-v)*cos(u+v) + a*cosh(u-v)*sin(u+v) + a*cosh(u-v)*sin(u+v) - a*sinh(u-v)*cos(u+v),
-           a*sinh(u-v)*sin(u+v) - a*cosh(u-v)*cos(u+v) - a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+Svv = vec3(2*a*cosh(u-v)*sin(u+v),
+           -2*a*cosh(u-v)*cos(u+v),
            0);
-Suv = vec3(-a*sinh(u-v)*cos(u+v) - a*cosh(u-v)*sin(u+v) + a*cosh(u-v)*sin(u+v) - a*sinh(u-v)*cos(u+v),
-           -a*sinh(u-v)*sin(u+v) + a*cosh(u-v)*cos(u+v) - a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
+Suv = vec3(-2*a*sinh(u-v)*cos(u+v),
+           -2*a*sinh(u-v)*sin(u+v),
            0);
 
 // Pseudo Sphère

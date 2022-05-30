@@ -1,7 +1,7 @@
 
 Le programme s'exécute depuis le répertoire en amont de shaders/ et data/.
 
-=====================================================
+===================================================== \
 Rappel pour compiler avec CMake puis executer:
 
 mkdir build
@@ -11,7 +11,7 @@ make
 cd ..
 build/pgm
 
-=====================================================
+===================================================== \
 Commandes:
 
 Clic gauche souris + déplacement 
@@ -22,3 +22,25 @@ Shift + Clic gauche souris + déplacement
     => Translation dans le plan de la caméra.
 Shift + Clic droit souris + déplacement 
     => Translation avant/arrière de la caméra.
+
+
+
+=================================================== \ 
+
+# Calcul de courbures sur surfaces paramétrées
+
+## Calcul analytique
+
+### Dans la fonction `load_scene()`  : 
+- commenter `build_surface()` \
+- décommenter la surface souhaitée ex : `build_sphere()`, `build_catenoide()`, ...
+
+
+## Calcul par différences finies
+
+### Dans la fonction `load_scene()` : 
+- décommenter la fonction `build_surface()` \
+- commenter toutes les fonctions `build_*()` \
+
+### Dans la fonction `build_surface() : `
+- décommenter la surface souhaitée ex : `sphere()`, `catenoide()`, ...

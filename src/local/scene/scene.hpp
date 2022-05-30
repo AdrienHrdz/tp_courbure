@@ -35,6 +35,11 @@ public:
     void build_helicoide_droit();
     void build_pseudo_sphere();
 
+    void sphere();
+    void paraboloide_hyperbolique();
+    void catenoide();
+    void helicoide_droit();
+    void pseudo_sphere();
 
     /** \brief Method called only once at the beginning (load off files ...) */
     void load_scene();

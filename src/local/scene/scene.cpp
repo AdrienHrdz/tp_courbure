@@ -26,36 +26,64 @@ float normalisationColormap(float Ks, float min, float max);
 
 void scene::build_surface()
 {
-    int const Nu=200;
-    int const Nv=200;
-    surface.set_plane_xy_unit(Nu,Nv);
+    // cylindre();
+    //sphere();
+    // paraboloide_hyperbolique();
+    // catenoide();
+    // helicoide();
+    pseudo_sphere();
 
-    float const u_min = 0.0f;
-    float const u_max = 2.0f*M_PI;
-    float const v_min = 0.0f;
-    float const v_max = 2.0f;
+    // calcul courbure
+    float const min_u = surface.vertex(0,0).x();
+    float const min_v = surface.vertex(0,0).y();
+    float const max_u = surface.vertex(surface.size_u()-1,surface.size_v()-1).x();
+    float const max_v = surface.vertex(surface.size_u()-1,surface.size_v()-1).y();
 
-    float const r = 0.2f;
-    for(int ku=0 ; ku<Nu ; ++ku)
+    // calcul des pas en u et v
+    float const du = (max_u-min_u)/(surface.size_u()-1);
+    float const dv = (max_v-min_v)/(surface.size_v()-1);
+
+    std::vector<float> K_s_Array;
+    std::vector<float> H_s_Array;
+    for(int ku = 1; ku < surface.size_u()-1; ku++)
     {
-        for(int kv=0 ; kv<Nv ; ++kv)
+        for(int kv = 1; kv < surface.size_v()-1; kv++)
         {
-            float const u_n = static_cast<float>(ku)/(Nu-1);
-            float const v_n = static_cast<float>(kv)/(Nv-1);
+            // dérivés premières
+            vec3 const Su = (surface.vertex(ku-1,kv)-surface.vertex(ku+1,kv))/(2*du);
+            vec3 const Sv = (surface.vertex(ku,kv-1)-surface.vertex(ku,kv+1))/(2*dv);
+            // dérivés secondes
+            vec3 const Suu = (surface.vertex(ku-1,kv)-2*surface.vertex(ku,kv)+surface.vertex(ku+1,kv))/(pow(du,2));
+            vec3 const Svv = (surface.vertex(ku,kv-1)-2*surface.vertex(ku,kv)+surface.vertex(ku,kv+1))/(pow(du,2));
+            vec3 const Suv = (surface.vertex(ku+1,kv-1)-surface.vertex(ku+1,kv+1)-surface.vertex(ku-1,kv-1)+surface.vertex(ku-1,kv+1))/(2*du)/(2*dv);
 
-            float const u = u_min + u_n * (u_max-u_min);
-            float const v = v_min + v_n * (v_max-v_min);
+            vec2 courbures = curvature(Su,Sv,Suu,Suv,Svv);
 
-
-            float const x = r*cos(u);
-            float const y = r*sin(u);
-            float const z = v;
-
-            surface.vertex(ku,kv) = {x,y,z};
-            surface.color(ku,kv) = {1.0f,v_n,1.0f};
+            float const K_s = courbures.x();
+            float const H_s = courbures.y();
+            K_s_Array.push_back(K_s);
+            H_s_Array.push_back(H_s);
         }
     }
-
+    float MAX_gauss_curv = *std::max_element(K_s_Array.begin(), K_s_Array.end());
+    float MIN_gauss_curv = *std::min_element(K_s_Array.begin(), K_s_Array.end());
+    std::cout<<"MAX = "<<MAX_gauss_curv<<std::endl;
+    std::cout<<"min = "<<MIN_gauss_curv<<std::endl;
+    //int i = 0;
+    for(int ku = 1; ku < surface.size_u()-1; ku++)
+    {
+        for(int kv = 1; kv < surface.size_v()-1; kv++)
+        {
+            //std::cout<<"ON NORMALISE"<<std::endl;
+            // normalisation color
+            float K_s = K_s_Array[(kv+1)*(surface.size_u()-1) + ku];
+            float x = normalisationColormap(K_s, MIN_gauss_curv, MAX_gauss_curv);
+            std::cout<<"x : "<<x<<std::endl;
+            // appliquer la couleur au vertex
+            vec3 color = colormap(x);
+            surface.color(ku,kv) = color;
+        }
+    }
 }
 
 void scene::build_sphere()
@@ -298,12 +326,12 @@ void scene::build_helicoide_droit()
     surface.set_plane_xy_unit(Nu,Nv);
 
     float const u_min = 0.0f;
-    float const u_max = 1.0f;
+    float const u_max = 2.0f;
     float const v_min = 0.0f;
-    float const v_max = 4.0f*M_PI;
+    float const v_max = 2.0f*M_PI;
 
     float const a = 0.2f;
-    float const h = 2.0f;
+    float const h = 0.5f;
 
     vec3 Su;
     vec3 Sv;
@@ -359,9 +387,9 @@ void scene::build_helicoide_droit()
             float const v = v_min + v_n * (v_max-v_min);
 
 
-            float const x = a*sinh(u-v)*cos(u+v);
-            float const y = a*sinh(u-v)*sin(u+v);
-            float const z = h*(u+v);
+            float const x = u*cos(v);//a*sinh(u-v)*cos(u+v);
+            float const y = u*sin(v);//a*sinh(u-v)*sin(u+v);
+            float const z = h*v;//h*(u+v);
 
             Su = vec3(a*cosh(u-v)*cos(u+v) - a*sinh(u-v)*sin(u+v),
                       a*cosh(u-v)*sin(u+v) + a*sinh(u-v)*cos(u+v),
@@ -461,21 +489,37 @@ void scene::build_pseudo_sphere()
             float const y = a*sin(v)/cosh(u);
             float const z = a*(u-tanh(u));
 
-            Su = vec3(-a*cos(v)*sinh(u)/(cosh(u)*cosh(u)),
-                      -a*sin(v)*sinh(u)/(cosh(u)*cosh(u)),
+//            Su = vec3(-a*cos(v)*sinh(u)/(cosh(u)*cosh(u)),
+//                      -a*sin(v)*sinh(u)/(cosh(u)*cosh(u)),
+//                      a*tanh(u)*tanh(u));
+//            Sv = vec3(-a*sin(v)/cosh(u),
+//                      a*cos(v)/cosh(u),
+//                      0);
+//            Suu = vec3(-a*cos(v)*(cosh(u)*cosh(u)*cosh(u) - 2*sinh(u)*sinh(u)*cosh(u))/(cosh(u)*cosh(u)*cosh(u)*cosh(u)),
+//                       -a*sin(v)*(cosh(u)*cosh(u)*cosh(u) - 2*sinh(u)*sinh(u)*cosh(u))/(cosh(u)*cosh(u)*cosh(u)*cosh(u)),
+//                       a*(1-tanh(u)*tanh(u))*tanh(u));
+//            Svv = vec3(-a*cos(v)/cosh(u),
+//                       -a*sin(v)/cosh(u),
+//                       0);
+//            Suv = vec3(a*sinh(u)*sin(v)/(cosh(u)*cosh(u)),
+//                       -a*sinh(u)*cos(v)/(cosh(u)*cosh(u)),
+//                       0);
+            Su = vec3(-a*tanh(u)*cos(v)/cosh(u),
+                      -a*tanh(u)*sin(v)/cosh(u),
                       a*tanh(u)*tanh(u));
             Sv = vec3(-a*sin(v)/cosh(u),
-                      a*cos(v)/cosh(u),
+                      -a*cos(v)/cosh(u),
                       0);
-            Suu = vec3(-a*cos(v)*(cosh(u)*cosh(u)*cosh(u) - 2*sinh(u)*sinh(u)*cosh(u))/(cosh(u)*cosh(u)*cosh(u)*cosh(u)),
-                       -a*sin(v)*(cosh(u)*cosh(u)*cosh(u) - 2*sinh(u)*sinh(u)*cosh(u))/(cosh(u)*cosh(u)*cosh(u)*cosh(u)),
-                       a*(1-tanh(u)*tanh(u))*tanh(u));
+            Suu = vec3(0.5*a*(cosh(2*u)-3)*cos(v)/(cosh(u)*cosh(u)*cosh(u)),
+                       0.5*a*(cosh(2*u)-3)*sin(v)/(cosh(u)*cosh(u)*cosh(u)),
+                       2*a*tanh(u)/(cosh(u)*cosh(u)));
             Svv = vec3(-a*cos(v)/cosh(u),
                        -a*sin(v)/cosh(u),
                        0);
-            Suv = vec3(a*sinh(u)*sin(v)/(cosh(u)*cosh(u)),
-                       -a*sinh(u)*cos(v)/(cosh(u)*cosh(u)),
+            Suv = vec3(a*tanh(u)*sin(v)/cosh(u),
+                       -a*tanh(u)*cos(v)/cosh(u),
                        0);
+
 
             curvatures = curvature(Su,Sv,Suu,Suv,Svv);
             Ks = curvatures(0);
@@ -483,6 +527,143 @@ void scene::build_pseudo_sphere()
             color = colormap(Ks);
             surface.vertex(ku,kv) = {x,y,z};
             surface.color(ku,kv) = color;
+        }
+    }
+}
+
+void scene::sphere()
+{
+    int const Nu=200;
+    int const Nv=200;
+    surface.set_plane_xy_unit(Nu,Nv);
+
+    float const u_min = 0.0f;
+    float const u_max = 2.0f*M_PI;
+    float const v_min = -0.5f*M_PI;
+    float const v_max = 0.5f*M_PI;
+
+    float const r = 0.2f;
+    for(int ku=0 ; ku<Nu ; ++ku)
+    {
+        for(int kv=0 ; kv<Nv ; ++kv)
+        {
+            float const u_n = static_cast<float>(ku)/(Nu-1);
+            float const v_n = static_cast<float>(kv)/(Nv-1);
+
+            float const u = u_min + u_n * (u_max-u_min);
+            float const v = v_min + v_n * (v_max-v_min);
+
+
+            float const x = r*cos(u)*cos(v);
+            float const y = r*sin(u)*cos(v);
+            float const z = r*sin(v);
+
+            surface.vertex(ku,kv) = {x,y,z};
+        }
+    }
+}
+
+void scene::paraboloide_hyperbolique()
+{
+    int const Nu=200;
+    int const Nv=200;
+    surface.set_plane_xy_unit(Nu,Nv);
+
+    float const u_min = -1.0f;
+    float const u_max = 1.0f;
+    float const v_min = -1.0f;
+    float const v_max = 1.0f;
+
+    float const a = 1.0f;
+    float const b = 1.0f;
+    float const h = 1.0f;
+
+    for(int ku = 0; ku < Nu; ku++)
+    {
+        for(int kv = 0; kv < Nv; kv++)
+        {
+            float const u_n = static_cast<float>(ku)/(Nu-1);
+            float const v_n = static_cast<float>(kv)/(Nv-1);
+
+            float const u = u_min + u_n * (u_max-u_min);
+            float const v = v_min + v_n * (v_max-v_min);
+
+            float const x = a*u;
+            float const y = b*v;
+            float const z = h*(pow(u,2)-pow(v,2));
+
+            surface.vertex(ku,kv) = {x,y,z};
+        }
+    }
+}
+
+void scene::catenoide()
+{
+    int const Nu=200;
+    int const Nv=200;
+    surface.set_plane_xy_unit(Nu,Nv);
+
+    float const u_min = -1.0f;
+    float const u_max = 1.0f;
+    float const v_min = 0.0f;
+    float const v_max = 2.0f*M_PI;
+
+    float const a = 0.2f;
+    for(int ku=0 ; ku<Nu ; ++ku)
+    {
+        for(int kv=0 ; kv<Nv ; ++kv)
+        {
+            float const u_n = static_cast<float>(ku)/(Nu-1);
+            float const v_n = static_cast<float>(kv)/(Nv-1);
+
+            float const u = u_min + u_n * (u_max-u_min);
+            float const v = v_min + v_n * (v_max-v_min);
+
+
+            float const x = a*cosh(u)*cos(v);
+            float const y = a*cosh(u)*sin(v);
+            float const z = a*u;
+
+            surface.vertex(ku,kv) = {x,y,z};
+        }
+    }
+}
+
+void scene::helicoide_droit()
+{
+
+}
+
+void scene::pseudo_sphere()
+{
+    int const Nu=200;
+    int const Nv=200;
+    surface.set_plane_xy_unit(Nu,Nv);
+
+    float const u_min = -3.0f;
+    float const u_max = 3.0f;
+    float const v_min = -1.0f*M_PI;
+    float const v_max = 1.0f*M_PI;
+
+    float const a = 0.2f;
+
+
+    for(int ku=0 ; ku<Nu ; ++ku)
+    {
+        for(int kv=0 ; kv<Nv ; ++kv)
+        {
+            float const u_n = static_cast<float>(ku)/(Nu-1);
+            float const v_n = static_cast<float>(kv)/(Nv-1);
+
+            float const u = u_min + u_n * (u_max-u_min);
+            float const v = v_min + v_n * (v_max-v_min);
+
+
+            float const x = a*cos(v)/cosh(u);
+            float const y = a*sin(v)/cosh(u);
+            float const z = a*(u-tanh(u));
+
+            surface.vertex(ku,kv) = {x,y,z};
         }
     }
 }
@@ -605,6 +786,7 @@ vec2 curvature(vec3 Su, vec3 Sv, vec3 Suu, vec3 Suv, vec3 Svv)
     vec2 LAMBDA = eigenvalue(Ws);
     float lambda1 = LAMBDA(0);
     float lambda2 = LAMBDA(1);
+
     // Gauss curvature
     float Ks = lambda1*lambda2;
     // Mean curvature
@@ -615,15 +797,16 @@ vec2 curvature(vec3 Su, vec3 Sv, vec3 Suu, vec3 Suv, vec3 Svv)
 
 float normalisationColormap(float Ks, float min, float max)
 {
-    // Pas tout sûr de cette fonction,
-    // à voir si on trouve une meilleure façon
-    float len = std::max( abs(min), abs(max));
-    if(Ks<0)
-    {
-        return (len-Ks)/(2*len);
-    }
-    else
-    {
-        return (len+Ks)/(2*len);
-    }
+//    Pas tout sûr de cette fonction,
+//    à voir si on trouve une meilleure façon
+//    float len = std::max( abs(min), abs(max));
+//    if(Ks<0)
+//    {
+//        return (len-Ks)/(2*len);
+//    }
+//    else
+//    {
+//        return (len+Ks)/(2*len);
+//    }
+    return (Ks-min)/(max-min);
 }
